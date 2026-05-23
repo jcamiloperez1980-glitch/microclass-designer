@@ -112,6 +112,139 @@ function describeAnchor(input: LearnerInput): string {
   }
 }
 
+export function buildLessonPlanHTML(input: LearnerInput, rec: Recommendation): string {
+  const primary = APPROACH_INFO[rec.primary];
+  const secondary = rec.secondary ? APPROACH_INFO[rec.secondary] : null;
+  const phases = buildPhases(input, rec.primary);
+  const today = new Date().toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+
+  const esc = (s: string) =>
+    s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+  return `
+<header class="plan-header">
+  <h1>Micro-Class Lesson Plan</h1>
+  <p class="meta">
+    <strong>Name:</strong> ${esc(input.studentName || "_____________")} &nbsp;·&nbsp;
+    <strong>Date:</strong> ${esc(today)} &nbsp;·&nbsp;
+    <strong>Course:</strong> Approaches and Methods in Language Teaching I — UNIMINUTO
+  </p>
+</header>
+
+<section>
+  <h2>Section 1 — Lesson Overview</h2>
+  <p><strong>Lesson topic.</strong> ${esc(input.topic) || "<em>[fill in]</em>"}</p>
+  <p><strong>Imagined learner profile.</strong> ${esc(input.level)} level; ${esc(input.ageContext) || "<em>[describe your imagined learners]</em>"}.</p>
+  <p><strong>Methodological approach.</strong> ${esc(primary.name)}${
+    secondary ? ` — with borrowed elements from ${esc(secondary.name)}` : ""
+  }.</p>
+  <p><strong>View of language (Unit 1).</strong> ${esc(primary.viewOfLanguage)}</p>
+  <p><strong>Post-method justification (Kumaravadivelu, 2003).</strong> Following the post-method
+  condition, this lesson is built on principled decisions for this context: ${esc(input.level)}
+  learners working on "${esc(input.topic) || "[topic]"}". ${esc(primary.name)} is appropriate
+  because ${esc(rec.rationale[0] ?? "it aligns the activity design with the communicative goal")}.
+  Particularity, practicality, and possibility (Kumaravadivelu, 2003) are addressed by adapting
+  the activity to the learners' level and the realistic 10–12 minute time frame.</p>
+</section>
+
+<section>
+  <h2>Section 2 — Learning Objective</h2>
+  <p><strong>Communicative objective.</strong> By the end of this lesson, students will be able to
+  ${esc(input.desiredOutcome) || "<em>[complete the outcome you specified]</em>"}.</p>
+  <p><strong>Language to be USED.</strong> Functional exponents, lexical chunks, and grammar
+  relevant to "${esc(input.topic) || "[topic]"}". List 4–6 target chunks learners will actually
+  produce.</p>
+  <p><strong>Materials / resources.</strong> ${esc(describeAnchor(input))}; whiteboard or shared
+  slide for language frames; brief prompt cards if needed.</p>
+</section>
+
+<section>
+  <h2>Section 3 — Lesson Procedure</h2>
+  <table class="procedure">
+    <thead>
+      <tr><th>Phase</th><th>Time</th><th>Teacher does...</th><th>Students do...</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Opening &amp; Context</strong></td>
+        <td>${phases.openingMin} min</td>
+        <td>${esc(phases.openingTeacher)}</td>
+        <td>${esc(phases.openingStudents)}</td>
+      </tr>
+      <tr>
+        <td><strong>Core Activity</strong></td>
+        <td>${phases.coreMin} min</td>
+        <td>${esc(phases.coreTeacher)}</td>
+        <td>${esc(phases.coreStudents)}</td>
+      </tr>
+      <tr>
+        <td><strong>Closing &amp; Feedback</strong></td>
+        <td>${phases.closingMin} min</td>
+        <td>${esc(phases.closingTeacher)}</td>
+        <td>${esc(phases.closingStudents)}</td>
+      </tr>
+      <tr class="total">
+        <td><strong>TOTAL</strong></td><td>10–12 min</td><td></td><td></td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h2>Section 4 — Methodological Justification (100–150 words)</h2>
+  <p>This micro-class draws on <strong>${esc(primary.name)}</strong> because
+  ${esc(rec.rationale[0] ?? "the activity centres on meaningful language use")}.
+  ${rec.rationale.slice(1).map(esc).join(" ")}
+  The view of language underpinning the lesson — ${esc(primary.viewOfLanguage.toLowerCase())} —
+  shapes every phase: learners are active users of English for a real communicative purpose.
+  Following Kumaravadivelu's (2003) post-method framework, this choice is justified by the
+  particular learner profile (${esc(input.level)}, ${esc(input.ageContext) || "[context]"})
+  and the constraints of the 10–12 minute format. Structural attention is preserved as a brief,
+  principled form-focus moment — never as the spine of the lesson.</p>
+  <p class="note">✏️ Expand this paragraph in your own voice before submitting. Reference one
+  course reading (Richards &amp; Rodgers, 2014; Kumaravadivelu, 2003; Nunan, 2004 for TBLT;
+  Brinton, Snow &amp; Wesche for CBI; Wilkins, 1976 for NFA).</p>
+</section>
+
+<section>
+  <h2>Structural micro-moves embedded in your lesson</h2>
+  <ul>
+    ${rec.structuralMicroMoves.map((m) => `<li>${esc(m)}</li>`).join("")}
+  </ul>
+</section>
+
+<section>
+  <h2>Pre-delivery checklist</h2>
+  <ul class="checklist">
+    <li>☐ Clear COMMUNICATIVE (not just linguistic) objective.</li>
+    <li>☐ The chosen approach is VISIBLE in the activity, not just named.</li>
+    <li>☐ Learners USE language — they don't just receive it. (Target: ${input.learnerProductionPct}% learner talk.)</li>
+    <li>☐ All materials prepared and tested.</li>
+    <li>☐ I can explain WHY I chose this approach for THIS context.</li>
+    <li>☐ Lesson connects to Unit 1 (view of language).</li>
+    <li>☐ Timed run-through fits 10–12 minutes.</li>
+  </ul>
+</section>
+
+${
+  rec.warnings.length
+    ? `<section class="warnings">
+        <h2>⚠ Warnings</h2>
+        <ul>${rec.warnings.map((w) => `<li>${esc(w)}</li>`).join("")}</ul>
+      </section>`
+    : ""
+}
+
+<footer class="plan-footer">
+  Generated draft — refine, add your own course references, and make it your own before uploading to Moodle.
+</footer>
+`;
+}
+
 function buildPhases(input: LearnerInput, primary: ApproachKey) {
   const base = {
     openingMin: 2,

@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { LearnerInput, Level, SkillFocus, GoalType, AnchorMaterial } from "@/lib/types";
 import { recommend } from "@/lib/recommend";
-import { buildLessonPlan } from "@/lib/lessonPlan";
+import { buildLessonPlan, buildLessonPlanHTML } from "@/lib/lessonPlan";
 import { APPROACH_INFO } from "@/lib/approaches";
 
 const STEPS = ["Learners", "Lesson", "Approach diagnostic", "Your plan"] as const;
@@ -28,6 +28,7 @@ export default function Page() {
 
   const rec = useMemo(() => recommend(input), [input]);
   const plan = useMemo(() => buildLessonPlan(input, rec), [input, rec]);
+  const planHTML = useMemo(() => buildLessonPlanHTML(input, rec), [input, rec]);
 
   function update<K extends keyof LearnerInput>(key: K, value: LearnerInput[K]) {
     setInput((s) => ({ ...s, [key]: value }));
@@ -41,8 +42,11 @@ export default function Page() {
         {step === 0 && <Step1 input={input} update={update} />}
         {step === 1 && <Step2 input={input} update={update} />}
         {step === 2 && <Step3 input={input} update={update} />}
-        {step === 3 && <Step4 input={input} rec={rec} plan={plan} />}
+        {step === 3 && <Step4 input={input} rec={rec} plan={plan} planHTML={planHTML} />}
       </div>
+
+      {/* Hidden printable view — only visible in print/PDF output */}
+      <div className="printable-plan" dangerouslySetInnerHTML={{ __html: planHTML }} />
 
       <div className="flex items-center justify-between">
         <button
@@ -298,10 +302,12 @@ function Step4({
   input,
   rec,
   plan,
+  planHTML,
 }: {
   input: LearnerInput;
   rec: ReturnType<typeof recommend>;
   plan: string;
+  planHTML: string;
 }) {
   const info = APPROACH_INFO[rec.primary];
   const secondary = rec.secondary ? APPROACH_INFO[rec.secondary] : null;
@@ -314,6 +320,11 @@ function Step4({
     a.download = `microclass-lesson-plan-${(input.studentName || "draft").replace(/\s+/g, "-").toLowerCase()}.md`;
     a.click();
     URL.revokeObjectURL(url);
+  }
+
+  function downloadPDF() {
+    // Browser print → "Save as PDF" gives a clean A4 PDF using the @media print styles.
+    window.print();
   }
 
   return (
@@ -382,12 +393,20 @@ function Step4({
       <section className="space-y-2">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-semibold text-slate-800">Draft lesson plan</h3>
-          <button
-            onClick={download}
-            className="rounded-md bg-brand-accent px-3 py-1.5 text-sm font-medium text-white hover:opacity-90"
-          >
-            ⬇ Download as Markdown
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={downloadPDF}
+              className="rounded-md bg-brand px-3 py-1.5 text-sm font-medium text-white hover:opacity-90"
+            >
+              ⬇ Download as PDF
+            </button>
+            <button
+              onClick={download}
+              className="rounded-md bg-brand-accent px-3 py-1.5 text-sm font-medium text-white hover:opacity-90"
+            >
+              ⬇ Markdown
+            </button>
+          </div>
         </div>
         <pre className="max-h-[420px] overflow-auto whitespace-pre-wrap rounded-md border border-slate-200 bg-slate-50 p-4 text-xs leading-relaxed text-slate-800">
           {plan}

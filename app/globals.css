@@ -3,3 +3,38 @@
 @tailwind utilities;
 
 body { background: #f8fafc; color: #0f172a; }
+
+/* Printable lesson plan — visible only when printing */
+.printable-plan { display: none; }
+
+.printable-plan h1 { font-size: 22pt; margin: 0 0 4pt; color: #1e3a8a; }
+.printable-plan h2 { font-size: 13pt; margin: 14pt 0 6pt; color: #1e3a8a; border-bottom: 1pt solid #1e3a8a; padding-bottom: 2pt; }
+.printable-plan .meta { font-size: 9pt; color: #475569; margin: 0 0 12pt; }
+.printable-plan p { font-size: 10.5pt; line-height: 1.45; margin: 4pt 0; }
+.printable-plan ul { font-size: 10.5pt; line-height: 1.45; padding-left: 18pt; margin: 4pt 0; }
+.printable-plan li { margin: 2pt 0; }
+.printable-plan table.procedure { width: 100%; border-collapse: collapse; font-size: 9.5pt; margin: 6pt 0; }
+.printable-plan table.procedure th,
+.printable-plan table.procedure td { border: 0.5pt solid #94a3b8; padding: 4pt 6pt; text-align: left; vertical-align: top; }
+.printable-plan table.procedure th { background: #e0e7ff; color: #1e3a8a; }
+.printable-plan table.procedure tr.total td { background: #f1f5f9; font-weight: 600; }
+.printable-plan .note { font-size: 9pt; color: #475569; font-style: italic; }
+.printable-plan section.warnings { background: #fef3c7; padding: 8pt; border-left: 3pt solid #b45309; margin-top: 12pt; }
+.printable-plan section.warnings h2 { color: #92400e; border-bottom: none; }
+.printable-plan .plan-footer { margin-top: 18pt; padding-top: 8pt; border-top: 0.5pt solid #cbd5e1; font-size: 8.5pt; color: #64748b; text-align: center; }
+.printable-plan section { page-break-inside: avoid; }
+
+@media print {
+  /* Hide everything except the printable plan */
+  body * { visibility: hidden; }
+  .printable-plan, .printable-plan * { visibility: visible; }
+  .printable-plan {
+    display: block !important;
+    position: absolute;
+    inset: 0;
+    padding: 0;
+    background: white;
+  }
+  header, footer, .no-print { display: none !important; }
+  @page { size: A4; margin: 18mm 16mm; }
+}
