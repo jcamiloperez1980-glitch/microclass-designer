@@ -1,12 +1,22 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { LearnerInput, Level, SkillFocus, GoalType, AnchorMaterial } from "@/lib/types";
+import { useEffect, useMemo, useState } from "react";
+import {
+  LearnerInput,
+  Level,
+  SkillFocus,
+  GoalType,
+  AnchorMaterial,
+  ApproachKey,
+  Recommendation,
+  Candidate,
+} from "@/lib/types";
 import { recommend } from "@/lib/recommend";
 import { buildLessonPlan, buildLessonPlanHTML } from "@/lib/lessonPlan";
 import { APPROACH_INFO } from "@/lib/approaches";
+import { buildMaterials, renderMaterialsHTML } from "@/lib/materials";
 
-const STEPS = ["Learners", "Lesson", "Approach diagnostic", "Your plan"] as const;
+const STEPS = ["Learners", "Lesson", "Approach diagnostic", "Choose & build"] as const;
 
 const DEFAULT_INPUT: LearnerInput = {
   studentName: "",
@@ -25,10 +35,38 @@ const DEFAULT_INPUT: LearnerInput = {
 export default function Page() {
   const [step, setStep] = useState(0);
   const [input, setInput] = useState<LearnerInput>(DEFAULT_INPUT);
+  const [chosen, setChosen] = useState<ApproachKey | null>(null);
 
   const rec = useMemo(() => recommend(input), [input]);
-  const plan = useMemo(() => buildLessonPlan(input, rec), [input, rec]);
-  const planHTML = useMemo(() => buildLessonPlanHTML(input, rec), [input, rec]);
+
+  // When user changes inputs, reset their choice so they re-pick if needed.
+  useEffect(() => {
+    setChosen(null);
+  }, [input]);
+
+  // Build the effective recommendation around the chosen approach (or default to top).
+  const effective = useMemo<Recommendation>(() => {
+    if (!chosen) return rec;
+    const chosenCandidate = rec.candidates.find((c) => c.approach === chosen);
+    return {
+      ...rec,
+      primary: chosen,
+      secondary: rec.candidates.find((c) => c.approach !== chosen)?.approach,
+      rationale: chosenCandidate?.rationale ?? rec.rationale,
+      structuralMicroMoves: chosenCandidate?.structuralMicroMoves ?? rec.structuralMicroMoves,
+    };
+  }, [rec, chosen]);
+
+  const plan = useMemo(() => buildLessonPlan(input, effective), [input, effective]);
+  const planHTML = useMemo(() => buildLessonPlanHTML(input, effective), [input, effective]);
+  const materials = useMemo(
+    () => buildMaterials(input, effective.primary),
+    [input, effective.primary]
+  );
+  const materialsHTML = useMemo(
+    () => renderMaterialsHTML(input, materials),
+    [input, materials]
+  );
 
   function update<K extends keyof LearnerInput>(key: K, value: LearnerInput[K]) {
     setInput((s) => ({ ...s, [key]: value }));
@@ -42,13 +80,23 @@ export default function Page() {
         {step === 0 && <Step1 input={input} update={update} />}
         {step === 1 && <Step2 input={input} update={update} />}
         {step === 2 && <Step3 input={input} update={update} />}
-        {step === 3 && <Step4 input={input} rec={rec} plan={plan} planHTML={planHTML} />}
+        {step === 3 && (
+          <Step4
+            input={input}
+            rec={rec}
+            effective={effective}
+            chosen={chosen}
+            setChosen={setChosen}
+            plan={plan}
+          />
+        )}
       </div>
 
-      {/* Hidden printable view — only visible in print/PDF output */}
+      {/* Hidden printables — visibility toggled by body class during print */}
       <div className="printable-plan" dangerouslySetInnerHTML={{ __html: planHTML }} />
+      <div className="printable-materials" dangerouslySetInnerHTML={{ __html: materialsHTML }} />
 
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between no-print">
         <button
           className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 disabled:opacity-40"
           onClick={() => setStep((s) => Math.max(0, s - 1))}
@@ -70,7 +118,7 @@ export default function Page() {
 
 function Stepper({ step }: { step: number }) {
   return (
-    <ol className="flex flex-wrap items-center gap-2 text-sm">
+    <ol className="flex flex-wrap items-center gap-2 text-sm no-print">
       {STEPS.map((label, i) => (
         <li
           key={label}
@@ -159,7 +207,9 @@ function Step1({
         <select
           className={inputCls}
           value={input.scaffoldingNeed}
-          onChange={(e) => update("scaffoldingNeed", e.target.value as LearnerInput["scaffoldingNeed"])}
+          onChange={(e) =>
+            update("scaffoldingNeed", e.target.value as LearnerInput["scaffoldingNeed"])
+          }
         >
           <option value="low">Low — minimal frames needed</option>
           <option value="medium">Medium — language frames, vocab bank</option>
@@ -197,7 +247,7 @@ function Step2({
           value={input.skillFocus}
           onChange={(e) => update("skillFocus", e.target.value as SkillFocus)}
         >
-          <option value="grammar_function">Grammar & function</option>
+          <option value="grammar_function">Grammar &amp; function</option>
           <option value="vocabulary">Vocabulary in context</option>
           <option value="oral">Oral / speaking</option>
           <option value="reading_listening">Reading / listening</option>
@@ -231,8 +281,7 @@ function Step3({
       <h2 className="text-lg font-semibold">Step 3 — Approach diagnostic</h2>
       <p className="text-sm text-slate-600">
         Five quick questions. Your answers map to one of the modern approaches from Units 1–2.
-        Structural elements (grammar drills, form-focus) will appear in your plan only as
-        supporting micro-moves — never as the spine of the lesson.
+        Structural elements appear in your plan only as supporting micro-moves — never as the spine.
       </p>
 
       <Field label="What is the heart of your lesson?">
@@ -267,7 +316,7 @@ function Step3({
       </Field>
 
       <Field
-        label={`Approximate % of time learners will be using English (not listening to you): ${input.learnerProductionPct}%`}
+        label={`Approximate % of time learners will be using English: ${input.learnerProductionPct}%`}
         hint="The rubric rewards learner production. 50%+ is a healthy target for a micro-class."
       >
         <input
@@ -301,66 +350,114 @@ function Step3({
 function Step4({
   input,
   rec,
+  effective,
+  chosen,
+  setChosen,
   plan,
-  planHTML,
 }: {
   input: LearnerInput;
-  rec: ReturnType<typeof recommend>;
+  rec: Recommendation;
+  effective: Recommendation;
+  chosen: ApproachKey | null;
+  setChosen: (k: ApproachKey | null) => void;
   plan: string;
-  planHTML: string;
 }) {
-  const info = APPROACH_INFO[rec.primary];
-  const secondary = rec.secondary ? APPROACH_INFO[rec.secondary] : null;
+  function printPlan() {
+    document.body.classList.add("print-plan");
+    const cleanup = () => {
+      document.body.classList.remove("print-plan");
+      window.removeEventListener("afterprint", cleanup);
+    };
+    window.addEventListener("afterprint", cleanup);
+    window.print();
+  }
 
-  function download() {
+  function printMaterials() {
+    document.body.classList.add("print-materials");
+    const cleanup = () => {
+      document.body.classList.remove("print-materials");
+      window.removeEventListener("afterprint", cleanup);
+    };
+    window.addEventListener("afterprint", cleanup);
+    window.print();
+  }
+
+  function downloadMarkdown() {
     const blob = new Blob([plan], { type: "text/markdown;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `microclass-lesson-plan-${(input.studentName || "draft").replace(/\s+/g, "-").toLowerCase()}.md`;
+    a.download = `microclass-lesson-plan-${(input.studentName || "draft")
+      .replace(/\s+/g, "-")
+      .toLowerCase()}.md`;
     a.click();
     URL.revokeObjectURL(url);
   }
 
-  function downloadPDF() {
-    // Browser print → "Save as PDF" gives a clean A4 PDF using the @media print styles.
-    window.print();
+  // 4a — chooser
+  if (!chosen) {
+    return (
+      <div className="space-y-5">
+        <div>
+          <h2 className="text-lg font-semibold">Step 4 — Pick your approach</h2>
+          <p className="text-sm text-slate-600">
+            Based on your answers, two approaches fit your lesson well. Read both — they shape your
+            lesson differently. Pick the one that matches who you want to be as a teacher.
+          </p>
+        </div>
+        <div className="grid gap-4 md:grid-cols-2">
+          {rec.candidates.slice(0, 2).map((c, i) => (
+            <ChoiceCard
+              key={c.approach}
+              candidate={c}
+              isTop={i === 0}
+              onChoose={() => setChosen(c.approach)}
+            />
+          ))}
+        </div>
+        {rec.warnings.length > 0 && (
+          <section className="space-y-2 rounded-md border border-amber-300 bg-amber-50 p-3">
+            <h3 className="text-sm font-semibold text-amber-900">⚠ Before you choose</h3>
+            <ul className="list-disc space-y-1 pl-5 text-sm text-amber-900">
+              {rec.warnings.map((w, i) => (
+                <li key={i}>{w}</li>
+              ))}
+            </ul>
+          </section>
+        )}
+      </div>
+    );
   }
 
+  // 4b — chosen view
+  const info = APPROACH_INFO[effective.primary];
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-lg font-semibold">Step 4 — Your recommended approach</h2>
-        <p className="text-sm text-slate-600">
-          Based on your answers, here's the methodology that fits your lesson — and a draft plan
-          you can refine.
-        </p>
-      </div>
-
-      <div className="rounded-md border border-brand/30 bg-brand/5 p-4">
-        <div className="text-xs font-semibold uppercase tracking-wide text-brand">
-          Recommended approach
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h2 className="text-lg font-semibold">Step 4 — Your lesson built around</h2>
+          <p className="mt-1 text-xl font-bold text-brand">{info.name}</p>
+          <p className="text-sm italic text-slate-700">{info.tagline}</p>
         </div>
-        <div className="mt-1 text-xl font-bold text-slate-900">{info.name}</div>
-        <div className="mt-1 text-sm italic text-slate-700">{info.tagline}</div>
-        {secondary && (
-          <div className="mt-2 text-sm text-slate-700">
-            <strong>Borrow from:</strong> {secondary.name}
-          </div>
-        )}
+        <button
+          onClick={() => setChosen(null)}
+          className="rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100"
+        >
+          ← Choose differently
+        </button>
       </div>
 
       <section className="space-y-2">
         <h3 className="text-sm font-semibold text-slate-800">Why this approach?</h3>
         <ul className="list-disc space-y-1 pl-5 text-sm text-slate-700">
-          {rec.rationale.map((r, i) => (
+          {effective.rationale.map((r, i) => (
             <li key={i}>{r}</li>
           ))}
         </ul>
       </section>
 
       <section className="space-y-2">
-        <h3 className="text-sm font-semibold text-slate-800">Signature moves to make it visible</h3>
+        <h3 className="text-sm font-semibold text-slate-800">Signature moves</h3>
         <ul className="list-disc space-y-1 pl-5 text-sm text-slate-700">
           {info.signatureMoves.map((m, i) => (
             <li key={i}>{m}</li>
@@ -373,50 +470,129 @@ function Step4({
           Structural micro-moves (form-focus inside your modern frame)
         </h3>
         <ul className="list-disc space-y-1 pl-5 text-sm text-slate-700">
-          {rec.structuralMicroMoves.map((m, i) => (
+          {effective.structuralMicroMoves.map((m, i) => (
             <li key={i}>{m}</li>
           ))}
         </ul>
       </section>
 
-      {rec.warnings.length > 0 && (
-        <section className="space-y-2 rounded-md border border-amber-300 bg-amber-50 p-3">
-          <h3 className="text-sm font-semibold text-amber-900">⚠ Warnings</h3>
-          <ul className="list-disc space-y-1 pl-5 text-sm text-amber-900">
-            {rec.warnings.map((w, i) => (
-              <li key={i}>{w}</li>
-            ))}
-          </ul>
-        </section>
-      )}
-
-      <section className="space-y-2">
+      <section className="rounded-md border border-slate-200 bg-slate-50 p-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-slate-800">Draft lesson plan</h3>
+          <div>
+            <h3 className="text-sm font-semibold text-slate-800">📄 Lesson plan</h3>
+            <p className="text-xs text-slate-600">A4 PDF — Sections 1–4 of the Final Task template.</p>
+          </div>
           <div className="flex gap-2">
             <button
-              onClick={downloadPDF}
+              onClick={printPlan}
               className="rounded-md bg-brand px-3 py-1.5 text-sm font-medium text-white hover:opacity-90"
             >
-              ⬇ Download as PDF
+              ⬇ Download PDF
             </button>
             <button
-              onClick={download}
+              onClick={downloadMarkdown}
               className="rounded-md bg-brand-accent px-3 py-1.5 text-sm font-medium text-white hover:opacity-90"
             >
               ⬇ Markdown
             </button>
           </div>
         </div>
-        <pre className="max-h-[420px] overflow-auto whitespace-pre-wrap rounded-md border border-slate-200 bg-slate-50 p-4 text-xs leading-relaxed text-slate-800">
+      </section>
+
+      <section className="rounded-md border border-emerald-200 bg-emerald-50 p-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-sm font-semibold text-emerald-900">✂ Class materials</h3>
+            <p className="text-xs text-emerald-900/80">
+              Print, cut, distribute. Includes scenario / task / discussion cards plus language
+              frames and a vocabulary bank — laid out 2 cards per A4 page.
+            </p>
+          </div>
+          <button
+            onClick={printMaterials}
+            className="rounded-md bg-emerald-700 px-3 py-1.5 text-sm font-medium text-white hover:opacity-90"
+          >
+            ⬇ Download materials PDF
+          </button>
+        </div>
+      </section>
+
+      <details className="rounded-md border border-slate-200 bg-white p-3 text-sm">
+        <summary className="cursor-pointer font-medium text-slate-700">
+          Preview the lesson plan (Markdown)
+        </summary>
+        <pre className="mt-3 max-h-[360px] overflow-auto whitespace-pre-wrap rounded bg-slate-50 p-3 text-xs leading-relaxed text-slate-800">
           {plan}
         </pre>
-      </section>
+      </details>
 
       <p className="text-xs text-slate-500">
         Reminder: this is a starter draft. Refine the wording, add your own course references, and
         make it sound like YOU before uploading to Moodle.
       </p>
+    </div>
+  );
+}
+
+function ChoiceCard({
+  candidate,
+  isTop,
+  onChoose,
+}: {
+  candidate: Candidate;
+  isTop: boolean;
+  onChoose: () => void;
+}) {
+  const info = APPROACH_INFO[candidate.approach];
+  return (
+    <div
+      className={`flex h-full flex-col rounded-lg border p-4 shadow-sm ${
+        isTop ? "border-brand bg-brand/5" : "border-slate-200 bg-white"
+      }`}
+    >
+      {isTop && (
+        <div className="mb-2 inline-block w-fit rounded-full bg-brand px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
+          Best match
+        </div>
+      )}
+      <h3 className="text-base font-bold text-slate-900">{info.name}</h3>
+      <p className="mt-1 text-sm italic text-slate-700">{info.tagline}</p>
+      <p className="mt-2 text-xs text-slate-600">
+        <strong>View of language:</strong> {info.viewOfLanguage}
+      </p>
+
+      <div className="mt-3 space-y-1">
+        <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+          Why this fits
+        </h4>
+        <ul className="list-disc space-y-0.5 pl-5 text-xs text-slate-700">
+          {candidate.rationale.map((r, i) => (
+            <li key={i}>{r}</li>
+          ))}
+        </ul>
+      </div>
+
+      <div className="mt-3 space-y-1">
+        <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+          What it would look like
+        </h4>
+        <ul className="list-disc space-y-0.5 pl-5 text-xs text-slate-700">
+          {info.signatureMoves.slice(0, 2).map((m, i) => (
+            <li key={i}>{m}</li>
+          ))}
+        </ul>
+      </div>
+
+      <button
+        onClick={onChoose}
+        className={`mt-4 w-full rounded-md px-3 py-2 text-sm font-medium ${
+          isTop
+            ? "bg-brand text-white hover:opacity-90"
+            : "border border-brand bg-white text-brand hover:bg-brand/5"
+        }`}
+      >
+        Use {info.name.split(" (")[0]}
+      </button>
     </div>
   );
 }

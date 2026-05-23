@@ -4,9 +4,11 @@
 
 body { background: #f8fafc; color: #0f172a; }
 
-/* Printable lesson plan — visible only when printing */
-.printable-plan { display: none; }
+/* Printables — hidden on screen, shown only when their print mode is active */
+.printable-plan,
+.printable-materials { display: none; }
 
+/* ---------- Lesson plan print styling ---------- */
 .printable-plan h1 { font-size: 22pt; margin: 0 0 4pt; color: #1e3a8a; }
 .printable-plan h2 { font-size: 13pt; margin: 14pt 0 6pt; color: #1e3a8a; border-bottom: 1pt solid #1e3a8a; padding-bottom: 2pt; }
 .printable-plan .meta { font-size: 9pt; color: #475569; margin: 0 0 12pt; }
@@ -24,17 +26,59 @@ body { background: #f8fafc; color: #0f172a; }
 .printable-plan .plan-footer { margin-top: 18pt; padding-top: 8pt; border-top: 0.5pt solid #cbd5e1; font-size: 8.5pt; color: #64748b; text-align: center; }
 .printable-plan section { page-break-inside: avoid; }
 
+/* ---------- Materials (cuttable cards) ---------- */
+.printable-materials .materials-cover { padding: 0 0 12pt; border-bottom: 0.5pt solid #cbd5e1; margin-bottom: 14pt; }
+.printable-materials .materials-cover h1 { font-size: 22pt; color: #1e3a8a; margin: 0 0 4pt; }
+.printable-materials .materials-cover .meta { font-size: 9pt; color: #475569; margin: 0 0 6pt; }
+.printable-materials .materials-cover .intro { font-size: 10pt; line-height: 1.4; margin: 6pt 0; }
+.printable-materials .materials-cover .hint { font-size: 9pt; color: #475569; font-style: italic; }
+
+.printable-materials .cut-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4mm;
+}
+.printable-materials .cut-card {
+  border: 1pt dashed #475569;
+  border-radius: 4pt;
+  padding: 8pt 10pt;
+  min-height: 78mm;
+  display: flex;
+  flex-direction: column;
+  page-break-inside: avoid;
+  break-inside: avoid;
+  background: white;
+}
+.printable-materials .cut-card header h3 { font-size: 11pt; margin: 0 0 6pt; color: #1e3a8a; border-bottom: 0.5pt solid #cbd5e1; padding-bottom: 3pt; }
+.printable-materials .cut-card-body { font-size: 10pt; line-height: 1.4; flex: 1; }
+.printable-materials .cut-card footer { font-size: 8pt; color: #64748b; font-style: italic; margin-top: 6pt; padding-top: 4pt; border-top: 0.3pt solid #e2e8f0; }
+.printable-materials .cut-card.kind-frames { background: #eef2ff; }
+.printable-materials .cut-card.kind-vocab { background: #ecfdf5; }
+.printable-materials .cut-card.kind-task { background: #fef3c7; }
+
+/* ---------- Print mode switching ---------- */
 @media print {
-  /* Hide everything except the printable plan */
   body * { visibility: hidden; }
-  .printable-plan, .printable-plan * { visibility: visible; }
-  .printable-plan {
+  body.print-plan .printable-plan,
+  body.print-plan .printable-plan * { visibility: visible; }
+  body.print-plan .printable-plan {
     display: block !important;
     position: absolute;
     inset: 0;
     padding: 0;
     background: white;
   }
+
+  body.print-materials .printable-materials,
+  body.print-materials .printable-materials * { visibility: visible; }
+  body.print-materials .printable-materials {
+    display: block !important;
+    position: absolute;
+    inset: 0;
+    padding: 0;
+    background: white;
+  }
+
   header, footer, .no-print { display: none !important; }
-  @page { size: A4; margin: 18mm 16mm; }
+  @page { size: A4; margin: 14mm 12mm; }
 }

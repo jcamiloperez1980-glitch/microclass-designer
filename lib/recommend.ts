@@ -143,6 +143,28 @@ export function recommend(input: LearnerInput): Recommendation {
   // Structural micro-moves — never the main frame, only support
   const structuralMicroMoves = buildStructuralMicroMoves(input, finalPrimary);
 
+  // Top-2 candidates for the teacher to choose between.
+  // Always offer two distinct approaches — never two flavours of the same one.
+  const top: ApproachKey[] = [finalPrimary];
+  for (const k of ordered) {
+    if (top.length >= 2) break;
+    if (k !== finalPrimary && k !== finalSecondary) top.push(k);
+    else if (k !== finalPrimary && top.length === 1) top.push(k);
+  }
+  if (top.length < 2) {
+    for (const k of ordered) {
+      if (top.length >= 2) break;
+      if (!top.includes(k)) top.push(k);
+    }
+  }
+
+  const candidates = top.map((k): import("./types").Candidate => ({
+    approach: k,
+    score: k === "ECLECTIC" ? scores.ECLECTIC : scores[k],
+    rationale: rationaleFor(input, k),
+    structuralMicroMoves: buildStructuralMicroMoves(input, k),
+  }));
+
   return {
     primary: finalPrimary,
     secondary: finalSecondary,
@@ -150,7 +172,41 @@ export function recommend(input: LearnerInput): Recommendation {
     rationale,
     structuralMicroMoves,
     warnings,
+    candidates,
   };
+}
+
+function rationaleFor(input: LearnerInput, k: ApproachKey): string[] {
+  const r: string[] = [];
+  switch (k) {
+    case "NFA":
+      r.push("Organises your lesson around the communicative function learners need.");
+      r.push("Strong fit when the goal is naming WHAT learners must do with English (apologise, request, recommend).");
+      break;
+    case "TBLT":
+      r.push("Drives learners to use English to complete a concrete task with a real outcome.");
+      r.push("Built-in form-focus moment after the task keeps grammar principled, not central.");
+      break;
+    case "CBI_CLIL":
+      r.push("Uses real content (text, clip, image) as the lesson's spine.");
+      r.push("Pairs a content goal with a language goal — meaning leads, language follows.");
+      break;
+    case "CLT":
+      r.push("Centres the lesson on a meaningful exchange where learners negotiate meaning.");
+      r.push("Flexible — works across many topics when interaction is the heart of the lesson.");
+      break;
+    case "ECLECTIC":
+      r.push("Combines two approaches with explicit justification for each element.");
+      r.push("Use only when you can name WHY each borrowed element serves your learners.");
+      break;
+  }
+  if (input.hasRealOutcome && k === "TBLT") {
+    r.push("Your concrete outcome makes this an especially natural fit.");
+  }
+  if (input.anchor !== "none" && input.anchor !== "scenario_cards" && k === "CBI_CLIL") {
+    r.push("Your anchor material is already content-based — half the design work is done.");
+  }
+  return r;
 }
 
 function buildStructuralMicroMoves(input: LearnerInput, primary: ApproachKey): string[] {

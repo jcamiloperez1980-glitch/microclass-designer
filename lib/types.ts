@@ -42,11 +42,19 @@ export type ApproachKey =
   | "NFA"
   | "ECLECTIC";
 
+export type Candidate = {
+  approach: ApproachKey;
+  score: number;
+  rationale: string[];
+  structuralMicroMoves: string[];
+};
+
 export type Recommendation = {
   primary: ApproachKey;
   secondary?: ApproachKey;
   scores: Record<ApproachKey, number>;
   rationale: string[];
-  structuralMicroMoves: string[]; // small grammar/form-focus suggestions as support
+  structuralMicroMoves: string[];
   warnings: string[];
+  candidates: Candidate[]; // top 2, for the teacher to choose between
 };
