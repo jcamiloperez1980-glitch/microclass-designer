@@ -21,10 +21,13 @@ export type AnchorMaterial =
   | "scenario_cards"
   | "none";
 
+export type Modality = "face_to_face" | "virtual";
+
 export type LearnerInput = {
   studentName: string;
   level: Level;
   ageContext: string; // "university adults", "teens at language institute" ...
+  modality: Modality;
   topic: string;
   skillFocus: SkillFocus;
   goalType: GoalType;

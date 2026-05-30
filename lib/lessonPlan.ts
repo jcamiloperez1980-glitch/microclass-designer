@@ -5,7 +5,7 @@ export function buildLessonPlan(input: LearnerInput, rec: Recommendation): strin
   const primary = APPROACH_INFO[rec.primary];
   const secondary = rec.secondary ? APPROACH_INFO[rec.secondary] : null;
 
-  const phases = buildPhases(input, rec.primary);
+  const phases = virtualAdapt(buildPhases(input, rec.primary), input);
 
   return `# Micro-Class Lesson Plan
 *Generated draft — review, refine, and make it your own before uploading to Moodle.*
@@ -21,6 +21,8 @@ export function buildLessonPlan(input: LearnerInput, rec: Recommendation): strin
 **Lesson topic.** ${input.topic}
 
 **Imagined learner profile.** ${input.level} level; ${input.ageContext}.
+
+**Delivery mode.** ${input.modality === "virtual" ? "Virtual (synchronous online)" : "Face-to-face (in person)"}.
 
 **Methodological approach.** ${primary.name}${
     secondary ? ` — with borrowed elements from ${secondary.name}` : ""
@@ -97,6 +99,22 @@ ${rec.warnings.length ? "\n\n## ⚠️ Warnings\n\n" + rec.warnings.map((w) => `
 `;
 }
 
+function virtualAdapt(phases: ReturnType<typeof buildPhases>, input: LearnerInput) {
+  if (input.modality !== "virtual") return phases;
+  // Append virtual-specific instrumentation to each phase
+  phases.openingTeacher += " Shares screen with the anchor slide; pins instructions in chat.";
+  phases.openingStudents += " React in chat; respond aloud when unmuted.";
+  phases.coreTeacher +=
+    " Opens breakout rooms (3–4 per room); drops a shared Google Doc / Jamboard link in chat; visits each room briefly.";
+  phases.coreStudents +=
+    " Work in breakout rooms; record output in the shared doc; nominate one reporter.";
+  phases.closingTeacher +=
+    " Reconvenes the main room; shares the consolidated doc on screen; uses a chat poll to gauge confidence.";
+  phases.closingStudents +=
+    " Post one takeaway in chat (one word or chunk) as the wrap-up.";
+  return phases;
+}
+
 function describeAnchor(input: LearnerInput): string {
   switch (input.anchor) {
     case "authentic_text":
@@ -115,7 +133,7 @@ function describeAnchor(input: LearnerInput): string {
 export function buildLessonPlanHTML(input: LearnerInput, rec: Recommendation): string {
   const primary = APPROACH_INFO[rec.primary];
   const secondary = rec.secondary ? APPROACH_INFO[rec.secondary] : null;
-  const phases = buildPhases(input, rec.primary);
+  const phases = virtualAdapt(buildPhases(input, rec.primary), input);
   const today = new Date().toLocaleDateString("en-US", {
     year: "numeric",
     month: "long",
@@ -139,6 +157,7 @@ export function buildLessonPlanHTML(input: LearnerInput, rec: Recommendation): s
   <h2>Section 1 — Lesson Overview</h2>
   <p><strong>Lesson topic.</strong> ${esc(input.topic) || "<em>[fill in]</em>"}</p>
   <p><strong>Imagined learner profile.</strong> ${esc(input.level)} level; ${esc(input.ageContext) || "<em>[describe your imagined learners]</em>"}.</p>
+  <p><strong>Delivery mode.</strong> ${input.modality === "virtual" ? "Virtual (synchronous online)" : "Face-to-face (in person)"}.</p>
   <p><strong>Methodological approach.</strong> ${esc(primary.name)}${
     secondary ? ` — with borrowed elements from ${esc(secondary.name)}` : ""
   }.</p>

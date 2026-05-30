@@ -14,18 +14,47 @@ export type MaterialSet = {
 };
 
 export function buildMaterials(input: LearnerInput, approach: ApproachKey): MaterialSet {
-  switch (approach) {
-    case "NFA":
-      return nfaSet(input);
-    case "TBLT":
-      return tbltSet(input);
-    case "CBI_CLIL":
-      return cbiSet(input);
-    case "CLT":
-      return cltSet(input);
-    case "ECLECTIC":
-      return tbltSet(input); // sensible default frame for eclectic
+  const set = (() => {
+    switch (approach) {
+      case "NFA":
+        return nfaSet(input);
+      case "TBLT":
+        return tbltSet(input);
+      case "CBI_CLIL":
+        return cbiSet(input);
+      case "CLT":
+        return cltSet(input);
+      case "ECLECTIC":
+        return tbltSet(input);
+    }
+  })();
+
+  // For virtual classes, rewrite the teacher-facing intro and add a "digital handout" note
+  if (input.modality === "virtual") {
+    set.intro =
+      "VIRTUAL DELIVERY — these card templates also work as digital slides or chat messages. " +
+      "Suggested workflow: paste each card onto its own slide (or pin one in each breakout room's chat). " +
+      "Share the language frames + vocabulary cards on a permanently visible slide. " +
+      "If you still want to print, use them as your own teacher prompts.";
+    set.cards.unshift({
+      kind: "frames",
+      title: "Virtual delivery — quick checklist",
+      body:
+        "Before class:\n" +
+        "• One slide per scenario / task / discussion card.\n" +
+        "• One slide with ALL language frames visible throughout.\n" +
+        "• Pre-create breakout rooms (groups of 3–4).\n" +
+        "• Share a Google Doc / Jamboard link in chat for collaborative output.\n\n" +
+        "During class:\n" +
+        "• Pin instructions in chat AND say them aloud.\n" +
+        "• Visit each breakout room briefly.\n" +
+        "• Use chat reactions or a quick poll to check comprehension.\n" +
+        "• Keep one slide visible at all times — never go dark.",
+      footer: "Teacher-facing cheat sheet · virtual mediation",
+    });
   }
+
+  return set;
 }
 
 // --- helpers ---------------------------------------------------------------
@@ -314,14 +343,22 @@ export function renderMaterialsHTML(input: LearnerInput, set: MaterialSet): stri
     )
     .join("");
 
+  const modalityLabel =
+    input.modality === "virtual" ? "Virtual class" : "Face-to-face class";
+  const handlingHint =
+    input.modality === "virtual"
+      ? "💻 Use these as one slide per card, or pinned chat messages per breakout room."
+      : "✂ Cut along the dashed lines. Cards are sized 2 × 3 per A4 page.";
+
   return `
 <div class="materials-cover">
   <h1>Class Materials</h1>
   <p class="meta">For: ${esc(input.studentName || "_______")}
     &nbsp;·&nbsp; Topic: ${esc(input.topic) || "[topic]"}
-    &nbsp;·&nbsp; Approach: ${esc(set.approach.replace("_", "/"))}</p>
+    &nbsp;·&nbsp; Approach: ${esc(set.approach.replace("_", "/"))}
+    &nbsp;·&nbsp; Mode: ${esc(modalityLabel)}</p>
   <p class="intro">${esc(set.intro)}</p>
-  <p class="hint">✂ Cut along the dashed lines. Cards are sized 2 × 3 per A4 page.</p>
+  <p class="hint">${esc(handlingHint)}</p>
 </div>
 <div class="cut-grid">
   ${cardHTML}

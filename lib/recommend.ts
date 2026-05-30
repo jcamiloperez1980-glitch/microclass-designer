@@ -117,6 +117,29 @@ export function recommend(input: LearnerInput): Recommendation {
     rationale.push("Your lesson produces a concrete outcome — a hallmark of TBLT.");
   }
 
+  // Modality effects — virtual changes what works
+  if (input.modality === "virtual") {
+    // CBI/CLIL plays to virtual strengths (screen share, shared text, video)
+    scores.CBI_CLIL += 2;
+    // TBLT works well with breakout rooms + collaborative docs
+    scores.TBLT += 1;
+    // Information-gap style CLT works in breakout rooms but loses some spontaneity
+    // NFA role-plays need adaptation (no physical card hand-out)
+    rationale.push(
+      "Virtual mediation favours screen-shareable anchor material and breakout-room collaboration — CBI/CLIL and TBLT adapt most naturally."
+    );
+    if (input.anchor === "scenario_cards") {
+      warnings.push(
+        "You picked physical scenario cards but the class is virtual. Convert them to slides, a shared doc, or pinned chat messages — one scenario per breakout room."
+      );
+    }
+    if (input.learnerProductionPct >= 60 && input.level === "A1") {
+      warnings.push(
+        "High learner production in a virtual A1 class is hard — chat-based scaffolding and a visible language frame on every slide help a lot."
+      );
+    }
+  }
+
   // Pick primary & secondary
   const ordered = (Object.keys(scores) as ApproachKey[])
     .filter((k) => k !== "ECLECTIC")
@@ -211,6 +234,26 @@ function rationaleFor(input: LearnerInput, k: ApproachKey): string[] {
 
 function buildStructuralMicroMoves(input: LearnerInput, primary: ApproachKey): string[] {
   const moves: string[] = [];
+  if (input.modality === "virtual") {
+    moves.push(
+      "Virtual mediation move: keep the language frame visible on every shared slide — learners can't glance at a wall poster. Use the chat as a low-stakes backchannel for shy learners."
+    );
+    if (primary === "TBLT" || primary === "CLT" || primary === "NFA") {
+      moves.push(
+        "Use breakout rooms (3–4 learners) for the core activity. Drop a shared Google Doc / Jamboard link in chat so the group can co-write or record decisions visibly."
+      );
+    }
+    if (primary === "CBI_CLIL") {
+      moves.push(
+        "Share the anchor text/clip on screen; pause the video on key moments and use a quick chat poll or reaction to check comprehension."
+      );
+    }
+    if (primary === "NFA") {
+      moves.push(
+        "Pin one scenario per breakout room in the chat. Pre-record a 20-sec model exchange you can replay if a room gets stuck."
+      );
+    }
+  }
   if (input.skillFocus === "grammar_function" || input.goalType === "form") {
     moves.push(
       "Reserve 60–90 seconds for a focus-on-form moment — surface ONE structure that emerged in learners' production, board it, then return to use."

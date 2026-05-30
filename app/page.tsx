@@ -10,6 +10,7 @@ import {
   ApproachKey,
   Recommendation,
   Candidate,
+  Modality,
 } from "@/lib/types";
 import { recommend } from "@/lib/recommend";
 import { buildLessonPlan, buildLessonPlanHTML } from "@/lib/lessonPlan";
@@ -22,6 +23,7 @@ const DEFAULT_INPUT: LearnerInput = {
   studentName: "",
   level: "A2",
   ageContext: "",
+  modality: "face_to_face",
   topic: "",
   skillFocus: "oral",
   goalType: "task",
@@ -200,6 +202,36 @@ function Step1({
           placeholder="e.g., adults at a community language institute"
         />
       </Field>
+      <Field
+        label="Delivery mode"
+        hint="Virtual lessons need different anchors (slides, breakout rooms, chat) — the recommendation adapts."
+      >
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => update("modality", "face_to_face")}
+            className={`flex-1 rounded-md border px-3 py-2 text-sm font-medium ${
+              input.modality === "face_to_face"
+                ? "border-brand bg-brand text-white"
+                : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+            }`}
+          >
+            🏫 Face-to-face
+          </button>
+          <button
+            type="button"
+            onClick={() => update("modality", "virtual")}
+            className={`flex-1 rounded-md border px-3 py-2 text-sm font-medium ${
+              input.modality === "virtual"
+                ? "border-brand bg-brand text-white"
+                : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+            }`}
+          >
+            💻 Virtual (synchronous)
+          </button>
+        </div>
+      </Field>
+
       <Field
         label="How much scaffolding will learners need?"
         hint="A1/A2 learners almost always need medium–high scaffolding."
