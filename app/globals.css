@@ -4,13 +4,18 @@
 
 body { background: #f8fafc; color: #0f172a; }
 
+/* Avoid iOS zoom-on-focus: form controls need >= 16px on small screens. */
+@media (max-width: 639px) {
+  input, select, textarea { font-size: 16px !important; }
+}
+
 /* Printables — hidden on screen, shown only when their print mode is active */
 .printable-plan,
 .printable-materials { display: none; }
 
 /* ---------- Lesson plan print styling ---------- */
-.printable-plan h1 { font-size: 22pt; margin: 0 0 4pt; color: #1e3a8a; }
-.printable-plan h2 { font-size: 13pt; margin: 14pt 0 6pt; color: #1e3a8a; border-bottom: 1pt solid #1e3a8a; padding-bottom: 2pt; }
+.printable-plan h1 { font-size: 22pt; margin: 0 0 4pt; color: var(--brand, #1e3a8a); }
+.printable-plan h2 { font-size: 13pt; margin: 14pt 0 6pt; color: var(--brand, #1e3a8a); border-bottom: 1pt solid var(--brand, #1e3a8a); padding-bottom: 2pt; }
 .printable-plan .meta { font-size: 9pt; color: #475569; margin: 0 0 12pt; }
 .printable-plan p { font-size: 10.5pt; line-height: 1.45; margin: 4pt 0; }
 .printable-plan ul { font-size: 10.5pt; line-height: 1.45; padding-left: 18pt; margin: 4pt 0; }
@@ -18,7 +23,7 @@ body { background: #f8fafc; color: #0f172a; }
 .printable-plan table.procedure { width: 100%; border-collapse: collapse; font-size: 9.5pt; margin: 6pt 0; }
 .printable-plan table.procedure th,
 .printable-plan table.procedure td { border: 0.5pt solid #94a3b8; padding: 4pt 6pt; text-align: left; vertical-align: top; }
-.printable-plan table.procedure th { background: #e0e7ff; color: #1e3a8a; }
+.printable-plan table.procedure th { background: #e0e7ff; color: var(--brand, #1e3a8a); }
 .printable-plan table.procedure tr.total td { background: #f1f5f9; font-weight: 600; }
 .printable-plan .note { font-size: 9pt; color: #475569; font-style: italic; }
 .printable-plan section.warnings { background: #fef3c7; padding: 8pt; border-left: 3pt solid #b45309; margin-top: 12pt; }
@@ -28,7 +33,7 @@ body { background: #f8fafc; color: #0f172a; }
 
 /* ---------- Materials (cuttable cards) ---------- */
 .printable-materials .materials-cover { padding: 0 0 12pt; border-bottom: 0.5pt solid #cbd5e1; margin-bottom: 14pt; }
-.printable-materials .materials-cover h1 { font-size: 22pt; color: #1e3a8a; margin: 0 0 4pt; }
+.printable-materials .materials-cover h1 { font-size: 22pt; color: var(--brand, #1e3a8a); margin: 0 0 4pt; }
 .printable-materials .materials-cover .meta { font-size: 9pt; color: #475569; margin: 0 0 6pt; }
 .printable-materials .materials-cover .intro { font-size: 10pt; line-height: 1.4; margin: 6pt 0; }
 .printable-materials .materials-cover .hint { font-size: 9pt; color: #475569; font-style: italic; }
@@ -49,7 +54,7 @@ body { background: #f8fafc; color: #0f172a; }
   break-inside: avoid;
   background: white;
 }
-.printable-materials .cut-card header h3 { font-size: 11pt; margin: 0 0 6pt; color: #1e3a8a; border-bottom: 0.5pt solid #cbd5e1; padding-bottom: 3pt; }
+.printable-materials .cut-card header h3 { font-size: 11pt; margin: 0 0 6pt; color: var(--brand, #1e3a8a); border-bottom: 0.5pt solid #cbd5e1; padding-bottom: 3pt; }
 .printable-materials .cut-card-body { font-size: 10pt; line-height: 1.4; flex: 1; }
 .printable-materials .cut-card footer { font-size: 8pt; color: #64748b; font-style: italic; margin-top: 6pt; padding-top: 4pt; border-top: 0.3pt solid #e2e8f0; }
 .printable-materials .cut-card.kind-frames { background: #eef2ff; }
@@ -79,6 +84,6 @@ body { background: #f8fafc; color: #0f172a; }
     background: white;
   }
 
-  header, footer, .no-print { display: none !important; }
+  body > header, body > footer, .no-print { display: none !important; }
   @page { size: A4; margin: 14mm 12mm; }
 }

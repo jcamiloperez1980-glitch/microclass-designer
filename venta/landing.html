@@ -1,0 +1,366 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Micro-Class Designer — para licenciaturas en idiomas</title>
+<meta name="description" content="Herramienta web que guía a futuros docentes de lenguas en el diseño de una microclase de 10–12 minutos con enfoques comunicativos modernos. Licencia institucional para facultades de educación.">
+<style>
+  :root {
+    --ink: #0f172a;
+    --muted: #475569;
+    --line: #e2e8f0;
+    --bg: #ffffff;
+    --soft: #f8fafc;
+    --brand: #0f766e;
+    --brand-ink: #ffffff;
+    --brand-soft: #ccfbf1;
+    --accent: #f59e0b;
+    --radius: 14px;
+    --max: 1080px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ink: #e2e8f0; --muted: #94a3b8; --line: #1e293b; --bg: #0b1220; --soft: #111a2e;
+      --brand: #2dd4bf; --brand-ink: #042f2e; --brand-soft: #134e4a;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 16px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  a { color: inherit; }
+  .wrap { max-width: var(--max); margin: 0 auto; padding: 0 20px; }
+  section { padding: 72px 0; }
+  section + section { border-top: 1px solid var(--line); }
+  h1, h2, h3 { line-height: 1.2; margin: 0 0 .5em; letter-spacing: -0.01em; }
+  h1 { font-size: clamp(2rem, 5vw, 3.1rem); }
+  h2 { font-size: clamp(1.5rem, 3.2vw, 2.1rem); }
+  h3 { font-size: 1.1rem; }
+  p { margin: 0 0 1em; }
+  .eyebrow { font-size: .8rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--brand); margin-bottom: .75em; }
+  .lead { font-size: 1.15rem; color: var(--muted); max-width: 38em; }
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: .5em;
+    min-height: 48px; padding: 12px 22px; border-radius: 10px; font-weight: 600; text-decoration: none;
+    background: var(--brand); color: var(--brand-ink); border: 2px solid var(--brand);
+  }
+  .btn.ghost { background: transparent; color: var(--brand); }
+  .btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+  /* Top bar */
+  .top { position: sticky; top: 0; z-index: 10; background: color-mix(in srgb, var(--bg) 92%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
+  .top .wrap { display: flex; align-items: center; justify-content: space-between; height: 64px; gap: 12px; }
+  .logo { font-weight: 800; letter-spacing: -0.02em; display: flex; align-items: center; gap: 10px; }
+  .logo-mark { width: 28px; height: 28px; border-radius: 8px; background: var(--brand); display: grid; place-items: center; color: var(--brand-ink); font-size: 14px; }
+  .top .btn { min-height: 40px; padding: 8px 16px; font-size: .95rem; }
+
+  /* Hero */
+  .hero { padding-top: 64px; }
+  .hero-grid { display: grid; gap: 48px; grid-template-columns: 1.1fr .9fr; align-items: center; }
+  .hero .cta { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 28px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 24px; }
+  .chip { font-size: .85rem; padding: 4px 12px; border-radius: 999px; background: var(--soft); border: 1px solid var(--line); color: var(--muted); }
+
+  /* App mock-up (pure CSS) */
+  .mock { border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; background: var(--soft); box-shadow: 0 20px 50px -20px rgba(15, 23, 42, .25); }
+  .mock-head { background: var(--brand); color: var(--brand-ink); padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; }
+  .mock-head b { font-size: .95rem; }
+  .mock-lang { font-size: .7rem; border: 1px solid currentColor; border-radius: 6px; overflow: hidden; display: flex; opacity: .9; }
+  .mock-lang span { padding: 2px 8px; }
+  .mock-lang span:first-child { background: var(--brand-ink); color: var(--brand); }
+  .mock-body { padding: 16px; display: grid; gap: 10px; }
+  .mock-bar { height: 6px; border-radius: 6px; background: var(--line); overflow: hidden; }
+  .mock-bar i { display: block; width: 100%; height: 100%; background: var(--brand); }
+  .mock-card { background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 12px; font-size: .85rem; }
+  .mock-card.best { border-color: var(--brand); }
+  .mock-tag { display: inline-block; font-size: .65rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; background: var(--brand); color: var(--brand-ink); border-radius: 999px; padding: 1px 8px; margin-bottom: 6px; }
+  .mock-card b { display: block; }
+  .mock-card small { color: var(--muted); }
+  .mock-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .mock-btns span { text-align: center; font-size: .78rem; font-weight: 600; padding: 8px; border-radius: 8px; background: var(--brand); color: var(--brand-ink); }
+  .mock-btns span + span { background: var(--accent); color: #1f1300; }
+
+  /* Problem */
+  .cols { display: grid; gap: 20px; grid-template-columns: repeat(3, 1fr); margin-top: 32px; }
+  .card { border: 1px solid var(--line); border-radius: var(--radius); padding: 22px; background: var(--bg); }
+  .card p { color: var(--muted); margin: 0; }
+  .card .ico { font-size: 1.5rem; margin-bottom: 8px; }
+
+  /* Steps */
+  .steps { list-style: none; padding: 0; margin: 32px 0 0; display: grid; gap: 16px; grid-template-columns: repeat(4, 1fr); counter-reset: s; }
+  .steps li { counter-increment: s; border: 1px solid var(--line); border-radius: var(--radius); padding: 20px; background: var(--soft); }
+  .steps li::before { content: counter(s); display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: var(--brand); color: var(--brand-ink); font-weight: 700; margin-bottom: 12px; }
+  .steps p { color: var(--muted); margin: 0; font-size: .95rem; }
+
+  /* Benefits */
+  .two { display: grid; gap: 24px; grid-template-columns: 1fr 1fr; margin-top: 32px; }
+  .benefit { border-radius: var(--radius); padding: 26px; border: 1px solid var(--line); }
+  .benefit.teacher { background: var(--soft); }
+  .benefit.student { background: color-mix(in srgb, var(--brand-soft) 45%, var(--bg)); }
+  .benefit ul { margin: 0; padding-left: 1.2em; }
+  .benefit li { margin: .5em 0; }
+  .benefit li strong { display: block; }
+  .benefit li span { color: var(--muted); }
+
+  /* Institutional */
+  .feature-list { display: grid; gap: 12px 32px; grid-template-columns: 1fr 1fr; margin-top: 24px; padding: 0; list-style: none; }
+  .feature-list li { padding-left: 28px; position: relative; }
+  .feature-list li::before { content: "✓"; position: absolute; left: 0; top: 0; color: var(--brand); font-weight: 800; }
+
+  /* Pricing placeholder */
+  .pricing { display: grid; gap: 20px; grid-template-columns: repeat(3, 1fr); margin-top: 32px; }
+  .plan { border: 2px dashed var(--accent); border-radius: var(--radius); padding: 24px; background: var(--bg); display: flex; flex-direction: column; }
+  .plan h3 { margin-bottom: .25em; }
+  .price-slot { margin: 16px 0; padding: 14px; border-radius: 10px; background: color-mix(in srgb, var(--accent) 14%, var(--bg)); font-weight: 700; text-align: center; font-size: 1.05rem; }
+  .plan ul { margin: 0 0 20px; padding-left: 1.2em; color: var(--muted); flex: 1; }
+  .note { font-size: .9rem; color: var(--muted); margin-top: 20px; }
+
+  /* FAQ */
+  details { border: 1px solid var(--line); border-radius: 10px; padding: 14px 18px; margin-top: 12px; background: var(--bg); }
+  summary { cursor: pointer; font-weight: 600; min-height: 28px; }
+  details p { color: var(--muted); margin: .75em 0 0; }
+
+  /* Contact */
+  .contact { background: var(--brand); color: var(--brand-ink); border-radius: 20px; padding: 48px 32px; text-align: center; }
+  .contact .lead { color: inherit; opacity: .9; margin: 0 auto 24px; }
+  .contact .btn { background: var(--brand-ink); color: var(--brand); border-color: var(--brand-ink); }
+  .placeholder { display: inline-block; margin-top: 16px; font-size: .9rem; padding: 6px 12px; border: 1px dashed currentColor; border-radius: 8px; opacity: .9; }
+
+  footer { padding: 32px 0 48px; color: var(--muted); font-size: .9rem; }
+
+  @media (max-width: 900px) {
+    .hero-grid, .two { grid-template-columns: 1fr; }
+    .cols, .pricing { grid-template-columns: 1fr; }
+    .steps { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 560px) {
+    section { padding: 52px 0; }
+    .steps, .feature-list { grid-template-columns: 1fr; }
+    .top .logo span.full { display: none; }
+    .top .btn { padding: 8px 12px; font-size: .85rem; white-space: nowrap; }
+    .logo { white-space: nowrap; }
+    .contact { padding: 36px 20px; }
+  }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <div class="logo"><span class="logo-mark" aria-hidden="true">✎</span><span>Micro-Class <span class="full">Designer</span></span></div>
+    <a class="btn" href="#contacto">Solicitar demostración</a>
+  </div>
+</header>
+
+<main>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div>
+        <div class="eyebrow">Para coordinadores de licenciaturas en idiomas</div>
+        <h1>Microclases bien fundamentadas desde el primer borrador.</h1>
+        <p class="lead">Una herramienta web que guía a sus futuros docentes, paso a paso, en el diseño de una microclase de 10–12 minutos con enfoques comunicativos modernos (CLT, TBLT, CBI/CLIL, enfoque nocional-funcional) y produce un plan de clase y materiales listos para imprimir.</p>
+        <div class="cta">
+          <a class="btn" href="#contacto">Hablemos de su programa</a>
+          <a class="btn ghost" href="#como-funciona">Ver cómo funciona</a>
+        </div>
+        <div class="chips" aria-label="Características">
+          <span class="chip">Español / inglés</span>
+          <span class="chip">Funciona en celular</span>
+          <span class="chip">Configurable por curso</span>
+          <span class="chip">Sin datos personales almacenados</span>
+        </div>
+      </div>
+
+      <div class="mock" role="img" aria-label="Vista de la herramienta: el estudiante elige entre dos enfoques recomendados y descarga su plan en PDF">
+        <div class="mock-head">
+          <b>Micro-Class Designer</b>
+          <div class="mock-lang"><span>ES</span><span>EN</span></div>
+        </div>
+        <div class="mock-body">
+          <small style="color:var(--muted)">Paso 4 de 4 · Elegir y construir</small>
+          <div class="mock-bar"><i></i></div>
+          <div class="mock-card best">
+            <span class="mock-tag">Mejor opción</span>
+            <b>Enseñanza Basada en Tareas (TBLT)</b>
+            <small>Los estudiantes usan el inglés para completar una tarea real.</small>
+          </div>
+          <div class="mock-card">
+            <b>Enfoque Comunicativo (CLT)</b>
+            <small>La lengua sirve para comunicarse con sentido.</small>
+          </div>
+          <div class="mock-btns"><span>⬇ Plan en PDF</span><span>✂ Materiales</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROBLEMA -->
+  <section id="problema">
+    <div class="wrap">
+      <div class="eyebrow">El problema</div>
+      <h2>La microclase es clave en la formación docente, pero el diseño se queda en el aire.</h2>
+      <p class="lead">Los estudiantes conocen los enfoques en teoría, pero al planear su primera clase suelen volver a lo que vivieron como aprendices: explicación gramatical y ejercicios.</p>
+      <div class="cols">
+        <div class="card">
+          <div class="ico" aria-hidden="true">🧭</div>
+          <h3>De la teoría al plan</h3>
+          <p>Pasar de “conozco TBLT” a “sé diseñar 11 minutos con TBLT” es el salto más difícil, y ocurre casi siempre sin acompañamiento.</p>
+        </div>
+        <div class="card">
+          <div class="ico" aria-hidden="true">⏳</div>
+          <h3>Retroalimentación tardía</h3>
+          <p>El docente suele ver el plan cuando ya está entregado. Corregir el enfoque en ese momento cuesta tiempo a ambos.</p>
+        </div>
+        <div class="card">
+          <div class="ico" aria-hidden="true">📚</div>
+          <h3>Grupos grandes</h3>
+          <p>Con muchos estudiantes por grupo, es difícil revisar uno por uno la coherencia entre objetivo, enfoque y actividades.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CÓMO FUNCIONA -->
+  <section id="como-funciona">
+    <div class="wrap">
+      <div class="eyebrow">Cómo funciona</div>
+      <h2>Cuatro pasos guiados.</h2>
+      <ol class="steps">
+        <li><h3>Los estudiantes</h3><p>Nivel, contexto, modalidad presencial o virtual y cuánto andamiaje necesitan.</p></li>
+        <li><h3>La clase</h3><p>Tema, habilidad principal y el resultado comunicativo que se espera.</p></li>
+        <li><h3>Diagnóstico</h3><p>Cinco preguntas que relacionan sus decisiones con los enfoques del curso.</p></li>
+        <li><h3>Elegir y construir</h3><p>Dos enfoques recomendados con su justificación; el estudiante elige y descarga plan y materiales.</p></li>
+      </ol>
+      <p class="note">El resultado es un borrador: el estudiante debe revisarlo, citar las lecturas del curso y escribirlo con su propia voz. La herramienta lo recuerda en cada paso.</p>
+    </div>
+  </section>
+
+  <!-- BENEFICIOS -->
+  <section id="beneficios">
+    <div class="wrap">
+      <div class="eyebrow">Beneficios</div>
+      <h2>Mejor punto de partida para quien enseña y para quien aprende.</h2>
+      <div class="two">
+        <div class="benefit teacher">
+          <h3>Para el docente formador</h3>
+          <ul>
+            <li><strong>Planes más coherentes desde la primera versión.</strong><span>Objetivo, enfoque y actividades llegan alineados; la retroalimentación puede enfocarse en lo pedagógico.</span></li>
+            <li><strong>La plantilla de su curso.</strong><span>Secciones, duración, rango de palabras de la justificación y referencias se ajustan a su tarea evaluativa.</span></li>
+            <li><strong>Advertencias pedagógicas automáticas.</strong><span>Señala poca producción de los estudiantes, falta de andamiaje en A1/A2 o clases centradas solo en la forma.</span></li>
+            <li><strong>Cero administración.</strong><span>No hay cuentas que crear ni datos que custodiar: se comparte un enlace.</span></li>
+          </ul>
+        </div>
+        <div class="benefit student">
+          <h3>Para el futuro docente</h3>
+          <ul>
+            <li><strong>Entiende por qué elige un enfoque.</strong><span>Cada recomendación explica qué de su clase la justifica.</span></li>
+            <li><strong>Plan en PDF y Markdown.</strong><span>Cuatro secciones listas para revisar, ampliar y entregar.</span></li>
+            <li><strong>Materiales recortables.</strong><span>Tarjetas de escenario, tarea, rol y discusión, marcos de lengua y banco de vocabulario.</span></li>
+            <li><strong>Desde el celular y en su idioma.</strong><span>Interfaz en español o inglés, también para clases virtuales.</span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- INSTITUCIONAL -->
+  <section id="institucional">
+    <div class="wrap">
+      <div class="eyebrow">Versión institucional</div>
+      <h2>Adaptada a su programa.</h2>
+      <ul class="feature-list">
+        <li>Nombre de la institución, programa, curso y tarea evaluativa.</li>
+        <li>Encabezados del plan según su plantilla oficial.</li>
+        <li>Duración de la microclase y rango de palabras de la justificación.</li>
+        <li>Lecturas de referencia del curso.</li>
+        <li>Colores de la institución.</li>
+        <li>Idioma por defecto y del documento generado (español o inglés).</li>
+        <li>Publicación en su propio dominio o subdominio.</li>
+        <li>Sin claves de API ni costo por estudiante: todo corre en el navegador.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- PRECIO -->
+  <section id="precio">
+    <div class="wrap">
+      <div class="eyebrow">Licenciamiento</div>
+      <h2>Licencia institucional</h2>
+      <p class="lead">Opciones pensadas para un curso, un programa o toda una facultad.</p>
+      <div class="pricing">
+        <div class="plan">
+          <h3>Curso</h3>
+          <p style="color:var(--muted);margin:0">Un curso con su plantilla de tarea.</p>
+          <div class="price-slot">[PRECIO POR DEFINIR]</div>
+          <ul><li>Configuración del curso</li><li>Interfaz bilingüe</li><li>[Condiciones por definir]</li></ul>
+          <a class="btn ghost" href="#contacto">Consultar</a>
+        </div>
+        <div class="plan">
+          <h3>Programa</h3>
+          <p style="color:var(--muted);margin:0">Varios cursos de una licenciatura.</p>
+          <div class="price-slot">[PRECIO POR DEFINIR]</div>
+          <ul><li>Una configuración por curso</li><li>Colores y dominio propios</li><li>[Condiciones por definir]</li></ul>
+          <a class="btn" href="#contacto">Consultar</a>
+        </div>
+        <div class="plan">
+          <h3>Facultad</h3>
+          <p style="color:var(--muted);margin:0">Varias licenciaturas o sedes.</p>
+          <div class="price-slot">[PRECIO POR DEFINIR]</div>
+          <ul><li>Configuraciones ilimitadas</li><li>Acompañamiento en la puesta en marcha</li><li>[Condiciones por definir]</li></ul>
+          <a class="btn ghost" href="#contacto">Consultar</a>
+        </div>
+      </div>
+      <p class="note">⚠ Espacio reservado: reemplace los textos entre corchetes con precios y condiciones reales antes de publicar.</p>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section id="preguntas">
+    <div class="wrap">
+      <div class="eyebrow">Preguntas frecuentes</div>
+      <h2>Antes de decidir</h2>
+      <details>
+        <summary>¿La herramienta escribe el plan por el estudiante?</summary>
+        <p>No. Genera un borrador estructurado a partir de las decisiones del estudiante. El plan final debe ampliarse, citarse y redactarse con voz propia; la herramienta lo indica en pantalla y en el documento.</p>
+      </details>
+      <details>
+        <summary>¿Usa inteligencia artificial o guarda datos de los estudiantes?</summary>
+        <p>La lógica de recomendación son reglas pedagógicas explícitas que corren en el navegador. No requiere cuentas, no envía las respuestas a ningún servidor y no almacena datos personales.</p>
+      </details>
+      <details>
+        <summary>¿Sirve para lenguas distintas del inglés?</summary>
+        <p>La versión actual está pensada para la formación de docentes de inglés: los materiales para los estudiantes se generan en inglés. La interfaz y el plan pueden estar en español o en inglés.</p>
+      </details>
+      <details>
+        <summary>¿Funciona para clases virtuales?</summary>
+        <p>Sí. Si la microclase es virtual, las recomendaciones, el procedimiento y los materiales se adaptan a salas, chat y pantalla compartida.</p>
+      </details>
+    </div>
+  </section>
+
+  <!-- CONTACTO -->
+  <section id="contacto">
+    <div class="wrap">
+      <div class="contact">
+        <h2>¿Quiere verla con la plantilla de su curso?</h2>
+        <p class="lead">Agende una demostración y le mostramos la herramienta configurada para su programa.</p>
+        <a class="btn" href="#contacto">Solicitar demostración</a>
+        <div><span class="placeholder">[Enlace de contacto por definir: correo, formulario o agenda]</span></div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">Micro-Class Designer · Herramienta de apoyo para la formación de docentes de lenguas · [Datos de contacto por definir]</div>
+</footer>
+
+</body>
+</html>
