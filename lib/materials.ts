@@ -1,4 +1,11 @@
+import { Lang } from "@/config";
 import { ApproachKey, LearnerInput } from "./types";
+
+/*
+ * Learner-facing cards are always in English (the target language).
+ * Teacher-facing notes (intro, virtual checklist, cover) follow the document language.
+ */
+type T = (en: string, es: string) => string;
 
 export type MaterialCard = {
   kind: "scenario" | "task" | "role" | "discussion" | "comprehension" | "frames" | "vocab";
@@ -13,44 +20,65 @@ export type MaterialSet = {
   cards: MaterialCard[];
 };
 
-export function buildMaterials(input: LearnerInput, approach: ApproachKey): MaterialSet {
+export function buildMaterials(
+  input: LearnerInput,
+  approach: ApproachKey,
+  lang: Lang = "en"
+): MaterialSet {
+  const t: T = (en, es) => (lang === "es" ? es : en);
   const set = (() => {
     switch (approach) {
       case "NFA":
-        return nfaSet(input);
+        return nfaSet(input, t);
       case "TBLT":
-        return tbltSet(input);
+        return tbltSet(input, t);
       case "CBI_CLIL":
-        return cbiSet(input);
+        return cbiSet(input, t);
       case "CLT":
-        return cltSet(input);
+        return cltSet(input, t);
       case "ECLECTIC":
-        return tbltSet(input);
+        return tbltSet(input, t);
     }
   })();
 
   // For virtual classes, rewrite the teacher-facing intro and add a "digital handout" note
   if (input.modality === "virtual") {
-    set.intro =
+    set.intro = t(
       "VIRTUAL DELIVERY — these card templates also work as digital slides or chat messages. " +
-      "Suggested workflow: paste each card onto its own slide (or pin one in each breakout room's chat). " +
-      "Share the language frames + vocabulary cards on a permanently visible slide. " +
-      "If you still want to print, use them as your own teacher prompts.";
+        "Suggested workflow: paste each card onto its own slide (or pin one in each breakout room's chat). " +
+        "Share the language frames + vocabulary cards on a permanently visible slide. " +
+        "If you still want to print, use them as your own teacher prompts.",
+      "CLASE VIRTUAL — estas tarjetas también funcionan como diapositivas o mensajes de chat. " +
+        "Flujo sugerido: pega cada tarjeta en su propia diapositiva (o fija una en el chat de cada sala). " +
+        "Comparte los marcos de lengua y el banco de vocabulario en una diapositiva siempre visible. " +
+        "Si igual quieres imprimir, úsalas como tus propias guías de docente."
+    );
     set.cards.unshift({
       kind: "frames",
-      title: "Virtual delivery — quick checklist",
-      body:
+      title: t("Virtual delivery — quick checklist", "Clase virtual — lista rápida"),
+      body: t(
         "Before class:\n" +
-        "• One slide per scenario / task / discussion card.\n" +
-        "• One slide with ALL language frames visible throughout.\n" +
-        "• Pre-create breakout rooms (groups of 3–4).\n" +
-        "• Share a Google Doc / Jamboard link in chat for collaborative output.\n\n" +
-        "During class:\n" +
-        "• Pin instructions in chat AND say them aloud.\n" +
-        "• Visit each breakout room briefly.\n" +
-        "• Use chat reactions or a quick poll to check comprehension.\n" +
-        "• Keep one slide visible at all times — never go dark.",
-      footer: "Teacher-facing cheat sheet · virtual mediation",
+          "• One slide per scenario / task / discussion card.\n" +
+          "• One slide with ALL language frames visible throughout.\n" +
+          "• Pre-create breakout rooms (groups of 3–4).\n" +
+          "• Share a Google Doc / Jamboard link in chat for collaborative output.\n\n" +
+          "During class:\n" +
+          "• Pin instructions in chat AND say them aloud.\n" +
+          "• Visit each breakout room briefly.\n" +
+          "• Use chat reactions or a quick poll to check comprehension.\n" +
+          "• Keep one slide visible at all times — never go dark.",
+        "Antes de la clase:\n" +
+          "• Una diapositiva por tarjeta de escenario / tarea / discusión.\n" +
+          "• Una diapositiva con TODOS los marcos de lengua, visible todo el tiempo.\n" +
+          "• Crea las salas con anticipación (grupos de 3–4).\n" +
+          "• Comparte en el chat un enlace a un documento colaborativo.\n\n" +
+          "Durante la clase:\n" +
+          "• Fija las instrucciones en el chat Y dilas en voz alta.\n" +
+          "• Visita brevemente cada sala.\n" +
+          "• Usa reacciones o una encuesta rápida para verificar comprensión.\n" +
+          "• Mantén siempre una diapositiva visible: nunca dejes la pantalla en negro."
+      ),
+      footer: t("Teacher-facing cheat sheet · virtual mediation", "Guía para el docente · mediación virtual"),
     });
   }
 
@@ -95,7 +123,7 @@ function vocabCard(input: LearnerInput): MaterialCard {
 
 // --- NFA -------------------------------------------------------------------
 
-function nfaSet(input: LearnerInput): MaterialSet {
+function nfaSet(input: LearnerInput, t: T): MaterialSet {
   const scenarios = [
     {
       title: "Scenario 1 — Hotel Reception",
@@ -143,8 +171,10 @@ function nfaSet(input: LearnerInput): MaterialSet {
 
   return {
     approach: "NFA",
-    intro:
+    intro: t(
       "Cut along the dashed lines. Give ONE scenario card per pair. Pairs role-play, then swap. Adapt the scenarios to your specific function if it is not “polite requests”.",
+      "Recorta por las líneas punteadas. Entrega UNA tarjeta de escenario por pareja. Las parejas hacen el juego de roles y luego intercambian. Adapta los escenarios a tu función si no es “hacer peticiones corteses”."
+    ),
     cards: [
       framesCard(input),
       ...scenarios.map<MaterialCard>((s) => ({
@@ -160,12 +190,14 @@ function nfaSet(input: LearnerInput): MaterialSet {
 
 // --- TBLT ------------------------------------------------------------------
 
-function tbltSet(input: LearnerInput): MaterialSet {
+function tbltSet(input: LearnerInput, t: T): MaterialSet {
   const outcome = input.desiredOutcome || "complete the task using English";
   return {
     approach: "TBLT",
-    intro:
+    intro: t(
       "Cut along the dashed lines. Give the Task Brief to every group. Give ONE role card per learner in each group of 3–4. The group must reach a single shared decision and report it.",
+      "Recorta por las líneas punteadas. Entrega la consigna de la tarea a cada grupo y UNA tarjeta de rol a cada estudiante (grupos de 3–4). El grupo debe llegar a una sola decisión compartida y reportarla."
+    ),
     cards: [
       {
         kind: "task",
@@ -224,11 +256,13 @@ function tbltSet(input: LearnerInput): MaterialSet {
 
 // --- CBI / CLIL ------------------------------------------------------------
 
-function cbiSet(input: LearnerInput): MaterialSet {
+function cbiSet(input: LearnerInput, t: T): MaterialSet {
   return {
     approach: "CBI_CLIL",
-    intro:
+    intro: t(
       "Print the anchor material (text/image/transcript) separately. Cut and distribute one comprehension card and one discussion card per pair. Bring the language frames card to the closing phase.",
+      "Imprime aparte el material ancla (texto/imagen/transcripción). Recorta y entrega una tarjeta de comprensión y una de discusión por pareja. Usa la tarjeta de marcos de lengua en el cierre."
+    ),
     cards: [
       {
         kind: "comprehension",
@@ -268,12 +302,14 @@ function cbiSet(input: LearnerInput): MaterialSet {
 
 // --- CLT -------------------------------------------------------------------
 
-function cltSet(input: LearnerInput): MaterialSet {
+function cltSet(input: LearnerInput, t: T): MaterialSet {
   const outcome = input.desiredOutcome || "exchange opinions in English";
   return {
     approach: "CLT",
-    intro:
+    intro: t(
       "Cut along the dashed lines. Distribute ONE discussion card per pair or small group. Each card creates a genuine reason to communicate. Adapt the prompts to YOUR topic.",
+      "Recorta por las líneas punteadas. Entrega UNA tarjeta de discusión por pareja o grupo pequeño. Cada tarjeta crea una razón genuina para comunicarse. Adapta las consignas a TU tema."
+    ),
     cards: [
       {
         kind: "discussion",
@@ -324,7 +360,8 @@ function cltSet(input: LearnerInput): MaterialSet {
 
 // --- HTML rendering for print ----------------------------------------------
 
-export function renderMaterialsHTML(input: LearnerInput, set: MaterialSet): string {
+export function renderMaterialsHTML(input: LearnerInput, set: MaterialSet, lang: Lang = "en"): string {
+  const t: T = (en, es) => (lang === "es" ? es : en);
   const esc = (s: string) =>
     s
       .replace(/&/g, "&amp;")
@@ -344,19 +381,25 @@ export function renderMaterialsHTML(input: LearnerInput, set: MaterialSet): stri
     .join("");
 
   const modalityLabel =
-    input.modality === "virtual" ? "Virtual class" : "Face-to-face class";
+    input.modality === "virtual" ? t("Virtual class", "Clase virtual") : t("Face-to-face class", "Clase presencial");
   const handlingHint =
     input.modality === "virtual"
-      ? "💻 Use these as one slide per card, or pinned chat messages per breakout room."
-      : "✂ Cut along the dashed lines. Cards are sized 2 × 3 per A4 page.";
+      ? t(
+          "💻 Use these as one slide per card, or pinned chat messages per breakout room.",
+          "💻 Úsalas como una diapositiva por tarjeta o como mensajes fijados en el chat de cada sala."
+        )
+      : t(
+          "✂ Cut along the dashed lines. Cards are laid out two per row on A4.",
+          "✂ Recorta por las líneas punteadas. Las tarjetas van de a dos por fila en hoja A4."
+        );
 
   return `
 <div class="materials-cover">
-  <h1>Class Materials</h1>
-  <p class="meta">For: ${esc(input.studentName || "_______")}
-    &nbsp;·&nbsp; Topic: ${esc(input.topic) || "[topic]"}
-    &nbsp;·&nbsp; Approach: ${esc(set.approach.replace("_", "/"))}
-    &nbsp;·&nbsp; Mode: ${esc(modalityLabel)}</p>
+  <h1>${t("Class Materials", "Materiales de clase")}</h1>
+  <p class="meta">${t("For", "Para")}: ${esc(input.studentName || "_______")}
+    &nbsp;·&nbsp; ${t("Topic", "Tema")}: ${esc(input.topic) || t("[topic]", "[tema]")}
+    &nbsp;·&nbsp; ${t("Approach", "Enfoque")}: ${esc(set.approach.replace("_", "/"))}
+    &nbsp;·&nbsp; ${t("Mode", "Modalidad")}: ${esc(modalityLabel)}</p>
   <p class="intro">${esc(set.intro)}</p>
   <p class="hint">${esc(handlingHint)}</p>
 </div>

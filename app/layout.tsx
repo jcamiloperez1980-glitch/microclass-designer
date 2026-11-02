@@ -1,28 +1,47 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
+import { config, loc } from "@/config";
+import Shell from "./Shell";
 import "./globals.css";
 
+const lang = config.defaultLanguage;
+
 export const metadata: Metadata = {
-  title: "Micro-Class Designer · UNIMINUTO",
-  description:
-    "Design your 10–12 minute language micro-class with a principled methodological approach.",
+  title: config.institutionName
+    ? `Micro-Class Designer · ${config.institutionName}`
+    : "Micro-Class Designer",
+  description: loc(
+    {
+      es: "Diseña tu microclase de lengua con un enfoque metodológico fundamentado.",
+      en: "Design your language micro-class with a principled methodological approach.",
+    },
+    lang
+  ),
 };
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: config.theme.brand,
+};
+
+/** "#1e3a8a" → "30 58 138" for Tailwind's rgb(var(--x) / alpha) colours. */
+function hexToRgb(hex: string): string {
+  const h = hex.replace("#", "");
+  const n = parseInt(h.length === 3 ? h.replace(/./g, "$&$&") : h, 16);
+  return `${(n >> 16) & 255} ${(n >> 8) & 255} ${n & 255}`;
+}
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  const themeVars = {
+    "--brand-rgb": hexToRgb(config.theme.brand),
+    "--brand-accent-rgb": hexToRgb(config.theme.accent),
+    "--brand": config.theme.brand,
+  } as React.CSSProperties;
+
   return (
-    <html lang="en">
+    <html lang={lang} style={themeVars}>
       <body className="min-h-screen antialiased">
-        <header className="bg-brand text-white">
-          <div className="mx-auto max-w-4xl px-6 py-5">
-            <h1 className="text-xl font-bold tracking-tight">Micro-Class Designer</h1>
-            <p className="text-sm text-white/80">
-              UNIMINUTO · Approaches &amp; Methods in Language Teaching I · Final Task helper
-            </p>
-          </div>
-        </header>
-        <main className="mx-auto max-w-4xl px-6 py-8">{children}</main>
-        <footer className="mx-auto max-w-4xl px-6 pb-10 pt-6 text-xs text-slate-500">
-          A planning tool — your final lesson plan must still be your own work, uploaded to Moodle.
-        </footer>
+        <Shell>{children}</Shell>
       </body>
     </html>
   );
