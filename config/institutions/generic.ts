@@ -3,6 +3,7 @@ import { InstitutionConfig } from "../types";
 /**
  * Neutral configuration for any faculty of education / language-teaching programme.
  * Copy this file to create a configuration for a new institution.
+ * Activate it with NEXT_PUBLIC_INSTITUTION=generic
  */
 const generic: InstitutionConfig = {
   id: "generic",

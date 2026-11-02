@@ -15,10 +15,12 @@ export const INSTITUTIONS: Record<string, InstitutionConfig> = {
 
 /**
  * Active configuration, chosen at build time with the environment variable
- * NEXT_PUBLIC_INSTITUTION (defaults to "generic").
+ * NEXT_PUBLIC_INSTITUTION (defaults to "uniminuto" so the original course
+ * deployment keeps working unchanged; use "generic" for the neutral version).
  */
-const requested = process.env.NEXT_PUBLIC_INSTITUTION || "generic";
-export const config: InstitutionConfig = INSTITUTIONS[requested] ?? generic;
+const DEFAULT_INSTITUTION = uniminuto.id;
+const requested = process.env.NEXT_PUBLIC_INSTITUTION || DEFAULT_INSTITUTION;
+export const config: InstitutionConfig = INSTITUTIONS[requested] ?? INSTITUTIONS[DEFAULT_INSTITUTION];
 
 /** Pick the text for a language. */
 export function loc(text: Localized, lang: Lang): string {

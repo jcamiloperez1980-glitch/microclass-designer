@@ -43,8 +43,8 @@ Todo lo específico de una institución vive en `config/institutions/`. Se inclu
 
 | Archivo | Uso |
 |---|---|
-| `config/institutions/generic.ts` | Configuración neutra para cualquier licenciatura (por defecto). |
-| `config/institutions/uniminuto.ts` | Ejemplo real: UNIMINUTO — *Approaches and Methods in Language Teaching I*, Final Task. |
+| `config/institutions/uniminuto.ts` | Ejemplo real: UNIMINUTO — *Approaches and Methods in Language Teaching I*, Final Task (por defecto si no se define la variable). |
+| `config/institutions/generic.ts` | Configuración neutra para cualquier licenciatura (`NEXT_PUBLIC_INSTITUTION=generic`). |
 
 Para crear una nueva:
 
@@ -133,8 +133,8 @@ Everything institution-specific lives in `config/institutions/`. Two configurati
 
 | File | Use |
 |---|---|
-| `config/institutions/generic.ts` | Neutral configuration for any teacher-education programme (default). |
-| `config/institutions/uniminuto.ts` | Real example: UNIMINUTO — *Approaches and Methods in Language Teaching I*, Final Task. |
+| `config/institutions/uniminuto.ts` | Real example: UNIMINUTO — *Approaches and Methods in Language Teaching I*, Final Task (default when the variable is not set). |
+| `config/institutions/generic.ts` | Neutral configuration for any teacher-education programme (`NEXT_PUBLIC_INSTITUTION=generic`). |
 
 To add one:
 
